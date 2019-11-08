@@ -28,6 +28,13 @@ func GenRandomBytes(size int, c *gin.Context) {
 	dataLength := int64(data.Len())
 	_ = dataLength
 
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Panic: ", err)
+			c.Abort()
+		}
+	}()
+
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": err.Error(),
@@ -45,7 +52,7 @@ func main() {
 	p := ginprometheus.NewPrometheus("gin")
 	p.Use(r)
 
-	r.GET("/ping", func(c *gin.Context) {
+	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
