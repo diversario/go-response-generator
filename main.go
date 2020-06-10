@@ -1,9 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"math/rand"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -21,13 +21,6 @@ func GenRandomBytes(size int, c *gin.Context) {
 	randSource := rand.NewSource(int64(seed))
 	randGen := rand.New(randSource)
 
-	blk := make([]byte, size)
-	_, err := randGen.Read(blk)
-
-	data := bytes.NewReader(blk)
-	dataLength := int64(data.Len())
-	_ = dataLength
-
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("Panic: ", err)
@@ -35,13 +28,7 @@ func GenRandomBytes(size int, c *gin.Context) {
 		}
 	}()
 
-	if err != nil {
-		c.JSON(500, gin.H{
-			"error": err.Error(),
-		})
-	} else {
-		c.Data(200, "application/octet-stream", blk)
-	}
+	c.DataFromReader(200, int64(size), "application/octet-stream", randGen, map[string]string{})
 
 	return
 }
@@ -86,6 +73,21 @@ func main() {
 		}
 
 		GenRandomBytes(sizeBytes, c)
+	})
+
+	r.GET("/env", func(c *gin.Context) {
+		name := c.DefaultQuery("name", "")
+
+		if name == "" {
+			c.Status(404)
+			return
+		}
+
+		val := os.Getenv(name)
+
+		c.JSON(200, gin.H{
+			name: val,
+		})
 	})
 
 	fmt.Println(r.Run()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
