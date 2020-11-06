@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/zsais/go-gin-prometheus"
@@ -42,7 +43,17 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
+			"ts": fmt.Sprintf("%s", time.Now().Format(time.RFC3339Nano)),
 		})
+	})
+
+	r.GET("/headers", func(c *gin.Context) {
+		resp := gin.H{
+			"ts": fmt.Sprintf("%s", time.Now().Format(time.RFC3339Nano)),
+			"headers": c.Request.Header.Clone(),
+		}
+
+		c.JSON(200, resp)
 	})
 
 	r.GET("/response", func(c *gin.Context) {
