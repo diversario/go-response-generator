@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/diversario/go-echo-server/server"
 	"github.com/gin-gonic/gin"
 	"github.com/zsais/go-gin-prometheus"
 )
@@ -44,12 +45,14 @@ func main() {
 		c.JSON(200, gin.H{
 			"message": "pong",
 			"ts": fmt.Sprintf("%s", time.Now().Format(time.RFC3339Nano)),
+			"ip": c.ClientIP(),
 		})
 	})
 
 	r.GET("/headers", func(c *gin.Context) {
 		resp := gin.H{
 			"ts": fmt.Sprintf("%s", time.Now().Format(time.RFC3339Nano)),
+			"ip": c.ClientIP(),
 			"headers": c.Request.Header.Clone(),
 		}
 
@@ -98,10 +101,15 @@ func main() {
 
 		c.JSON(200, gin.H{
 			name: val,
+			"ip": c.ClientIP(),
+			"ts": fmt.Sprintf("%s", time.Now().Format(time.RFC3339Nano)),
 		})
 	})
 
-	fmt.Println(r.Run()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	go func() {
+		fmt.Println(r.Run()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	}()
+	server.Run()
 }
 
 
