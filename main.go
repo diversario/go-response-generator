@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"math/rand"
+	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
@@ -92,11 +96,6 @@ func main() {
 	r.GET("/env", func(c *gin.Context) {
 		name := c.DefaultQuery("name", "")
 
-		if name == "" {
-			c.Status(404)
-			return
-		}
-
 		val := os.Getenv(name)
 
 		c.JSON(200, gin.H{
@@ -106,10 +105,35 @@ func main() {
 		})
 	})
 
+	srv := &http.Server{
+		Addr:    "0.0.0.0:8080",
+		Handler: r,
+	}
+
 	go func() {
-		fmt.Println(r.Run()) // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+		// service connections
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("listen: %s\n", err)
+		}
 	}()
-	server.Run()
+
+	go func() {
+		server.Run()
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with
+	// a timeout of 5 seconds.
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	log.Println("Shutdown Server ...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatal("Server Shutdown:", err)
+	}
+	log.Println("Server exiting")
 }
 
 
