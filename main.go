@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/diversario/go-echo-server/server"
+	//"github.com/diversario/go-echo-server/server"
 	"github.com/gin-gonic/gin"
 	"github.com/zsais/go-gin-prometheus"
 )
@@ -117,9 +117,9 @@ func main() {
 		}
 	}()
 
-	go func() {
-		server.Run()
-	}()
+	//go func() {
+	//	server.Run()
+	//}()
 
 	// Wait for interrupt signal to gracefully shutdown the server with
 	// a timeout of 5 seconds.
